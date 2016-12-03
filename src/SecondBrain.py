@@ -18,16 +18,20 @@ while inUse == True:
     print "4. Help (AKA What the hell is this?"
     print "5. Exit"
     
-    response = raw_input("Please enter a command: ")
+    response = int(raw_input("Please enter a command: "))
     if response == 1 or response == 2 or response == 3 or response == 4:
         if response == 1:
             print "Okay I'll get to this. Gotta logic through how the file's will built up."
         elif response == 2:
                 fileLocation = raw_input("Please enter absolute file path: ")
                 tissue = open(fileLocation, 'r')
+                
+                firstLine =tissue.readline().strip()
         
-                if tissue.readline() != "[BrainTissue]":
+                if firstLine != "[BrainTissue]{":
                     print "Not a Brain Tissue file."
+                    print "Read" + firstLine
+                else:
                     for line in tissue:
                         print line #temp
         elif response == 3:
@@ -36,5 +40,5 @@ while inUse == True:
             print "Explain shit here"
         elif response == 5:
             exit
-        else:
+    else:
             print "Invalid response. Please try again."
