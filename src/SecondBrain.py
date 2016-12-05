@@ -9,11 +9,14 @@ def readTissueFile(fileName):
     tempSkull = {}  #stores all our brain tissue dynamically
     openBracket = False
     openBrace = False
-    lineCorrect = False #?
-    word = "" #?
-    parentCategory = []
-    directory = {}
-    bottomLevel = False
+    foundCategory = False
+    foundValue = False
+    numOpenBraces = 0
+    numOpenQuotes = 0
+    #lineCorrect = False #?
+    word = "" 
+    parent = ""
+    
     tissue = open(fileLocation, 'r')
                 
     firstLine =tissue.readline().strip()
@@ -29,39 +32,52 @@ def readTissueFile(fileName):
             for char in line: #iterate over each character in the line
                 if char == '[': #marks the beginning of a category
                     openBracket = True
+                    foundCategory = True
                 elif char == ']' and openBracket == True: #marks the end of a category
                     openBracket = False
                 elif char == '{' and openBracket == False:
-                    lineCorrect = True
+                    #lineCorrect = True
                     openBrace = True
+                    numOpenBraces += 1
+                elif char == '}' and numOpenBraces > 0:
+                    numOpenBraces -= 1
+                elif char == "\"":
+                    if numOpenQuotes == 0:
+                        numOpenQuotes += 1
+                        foundValue = True
+                    else:
+                        numOpenQuotes -= 1
                 else:
                     word += char
             print word   
             
-            if openBracket == False and lineCorrect == True: #line formatted correctly
+            if openBracket == False and numOpenQuotes == 0: #line formatted correctly
                 print "Line read successfully"
-                key = word
-                value = {} #empty dictionary to store further subcategories
-                print "Key = " + key
-                print " Value = ", value
-                '''if len(parentCategory) == 0: #top level category
+                if foundCategory == True:
+                    key = word
+                    value = {} #empty dictionary to store further subcategories
+                    #print "Key = " + key
+                    #print " Value = ", value
+                    #tempSkull[key] = value
                     tempSkull[key] = value
+                    if len(parent) != 0:
+                        tempSkull[key]["Parent Dir"] = parent #create parent key with parent directory as value
+                    if openBrace == True: #has children
+                        parent = key #save key as parent for following
+
+                elif foundValue == True:
+                    valuePieces = word.split(",") #split the two pieces of the value string
+                    key = valuePieces[0]
+                    value = valuePieces[1]
+                    tempSkull[key] = value
+                    if len(parent) != 0:
+                        tempSkull[key]["Parent Dir"] = parent #create parent key with parent directory as value
                 else:
-                    i = 0
-                    directory = tempSkull #create association to the current 'directory' in the dictionary
-                    while bottomLevel == False:
-                        for key in directory: #iterate down keys in current directory
-                                if key == parentCategory[i]: #find that parent categories subcategory
-                                    directory = directory[key] #save that directory as the next directory to traverse
-                                    i += 1
-                                    break
-                        bottomLevel = True #if key not found, must be bottom level
-                if openBrace == True: #contains subcategories, so make value a dictionary
-                    parentCategory.append(word)
+                    print "Something went wrong. Line was neither a category nor value"
+                    exit
                 
-                else:
-                    print "done with subcategories?"
-                '''
+                foundCategory = False
+                foundValue = False
             else:
                 print "Error reading in brain file. Last read word: " + word
                 exit
