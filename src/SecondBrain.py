@@ -11,11 +11,13 @@ def readTissueFile(fileName):
     openBrace = False
     foundCategory = False
     foundValue = False
+    valueListComplete = False
     numOpenBraces = 0
     numOpenQuotes = 0
     #lineCorrect = False #?
     word = "" 
     parent = ""
+    valueList = []
     
     tissue = open(fileLocation, 'r')
                 
@@ -41,6 +43,8 @@ def readTissueFile(fileName):
                     numOpenBraces += 1
                 elif char == '}' and numOpenBraces > 0:
                     numOpenBraces -= 1
+                    if foundValue == True and foundCategory == False:
+                        valueListComplete = True
                 elif char == "\"":
                     if numOpenQuotes == 0:
                         numOpenQuotes += 1
@@ -49,7 +53,13 @@ def readTissueFile(fileName):
                         numOpenQuotes -= 1
                 else:
                     word += char
-            print word   
+            #debugging
+            if foundCategory == True:
+                print "[" + word + "]"
+            elif foundValue == True:
+                print "\"" + word +"\""
+            else:
+                print "Not category or value"
             
             if openBracket == False and numOpenQuotes == 0: #line formatted correctly
                 print "Line read successfully"
@@ -67,17 +77,31 @@ def readTissueFile(fileName):
 
                 elif foundValue == True:
                     valuePieces = word.split(",") #split the two pieces of the value string
-                    key = valuePieces[0]
-                    value = valuePieces[1]
-                    tempSkull[key] = value
-                    if len(parent) != 0:
-                        tempSkull[key]["Parent Dir"] = parent #create parent key with parent directory as value
+                    for value in valuePieces:
+                        valueList.append(value)
+                    if valueListComplete:
+                        if len(parent) != 0:
+                            valueList.append("Parent:")
+                            valueList.append(parent)
+                            tempSkull[parent] = valueList
+                            print "Lowest level category with value list: ",
+                            print tempSkull[parent]
+                            valueList = []
+                        
+                        #for value in valueList:
+                            #key = valuePieces[0]
+                            #value = valuePieces[1]
+    
+                            #tempSkull[key] = value
+                            #if len(parent) != 0:
+                                #tempSkull[key]["Parent Dir"] = parent #create parent key with parent directory as value
                 else:
                     print "Something went wrong. Line was neither a category nor value"
                     exit
                 
                 foundCategory = False
                 foundValue = False
+                valueListComplete = False
             else:
                 print "Error reading in brain file. Last read word: " + word
                 exit
