@@ -4,14 +4,34 @@ Created on Dec 2, 2016
 @author: Brady
 '''
 from __builtin__ import file, exit
+from collections import OrderedDict
+
+def sortSkull(tempSkull):
+    newSkull = OrderedDict()
+    children = []
+    childDict = {}
+    for key in tempSkull:
+        if key not in newSkull:
+            for nextKey in tempSkull:
+                if "Parent Dir" in tempSkull[nextKey]:
+                    if tempSkull[nextKey]["Parent Dir"] == key:
+                        children.append(nextKey)
+            #newSkull[key] = {}
+            for child in children:
+                childDict[child] = {}
+            newSkull[key] = childDict
+        children = []
+        childDict = {}
+    print newSkull
 
 def readTissueFile(fileName):
-    tempSkull = {}  #stores all our brain tissue dynamically
+    tempSkull = OrderedDict()  #stores all our brain tissue dynamically
     openBracket = False
     openBrace = False
     foundCategory = False
     foundValue = False
     valueListComplete = False
+    segmentEnd = False
     numOpenBraces = 0
     numOpenQuotes = 0
     #lineCorrect = False #?
@@ -23,7 +43,7 @@ def readTissueFile(fileName):
                 
     firstLine =tissue.readline().strip()
         
-    if firstLine != "[BrainTissue]{":
+    if firstLine != "[BrainTissue]":
         print "Not a Brain Tissue file."
         print "Read" + firstLine
         exit
@@ -41,8 +61,9 @@ def readTissueFile(fileName):
                     #lineCorrect = True
                     openBrace = True
                     numOpenBraces += 1
-                elif char == '}' and numOpenBraces > 0:
+                elif char == '}':
                     numOpenBraces -= 1
+                    segmentEnd = True
                     if foundValue == True and foundCategory == False:
                         valueListComplete = True
                 elif char == "\"":
@@ -52,14 +73,16 @@ def readTissueFile(fileName):
                     else:
                         numOpenQuotes -= 1
                 else:
-                    word += char
+                    if char != ";":
+                        word += char
             #debugging
             if foundCategory == True:
                 print "[" + word + "]"
             elif foundValue == True:
                 print "\"" + word +"\""
             else:
-                print "Not category or value"
+                if segmentEnd != True:
+                    print "Not category or value"
             
             if openBracket == False and numOpenQuotes == 0: #line formatted correctly
                 print "Line read successfully"
@@ -95,6 +118,9 @@ def readTissueFile(fileName):
                             #tempSkull[key] = value
                             #if len(parent) != 0:
                                 #tempSkull[key]["Parent Dir"] = parent #create parent key with parent directory as value
+                elif segmentEnd == True:
+                    print "Segment end. Number of open braces: ",
+                    print numOpenBraces
                 else:
                     print "Something went wrong. Line was neither a category nor value"
                     exit
@@ -102,11 +128,18 @@ def readTissueFile(fileName):
                 foundCategory = False
                 foundValue = False
                 valueListComplete = False
+                segmentEnd = False
             else:
                 print "Error reading in brain file. Last read word: " + word
                 exit
 
-
+        if numOpenBraces != 0:
+            print "Not all braces were closed."
+            exit
+        print tempSkull
+        
+        sortSkull(tempSkull)
+        
 inUse = True
 skull = {}
 
